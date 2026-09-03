@@ -5,7 +5,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: [self-hosted, minikube]
+    runs-on: [self-hosted, macOS]
 
     steps:
       - name: Checkout repo
