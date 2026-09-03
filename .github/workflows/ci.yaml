@@ -1,0 +1,24 @@
+name: CI
+on:
+    push:
+        branches: [ "main" ]
+    pull_request:
+        branches: [ "main" ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      -  run: docker build -t broken-app:ci ./app
+      -  run: docker compose up -d --build
+      - name: smoke test
+        run: |
+          for i in $(seq 1,15); do
+            curl -fs http://localhost:3000/health && exit 0
+            sleep 2
+          done
+          docker compose logs
+          exit 1
+      - if: always()
+        run: docker compose down -V
+
