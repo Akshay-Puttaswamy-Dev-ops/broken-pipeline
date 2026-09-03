@@ -1,15 +1,22 @@
 version: '3.9'
 services:
   app:
-    build: ./backend
+   # FIX: was ./backend - no backend folder in the repo, the app is in ./app
+#    build: ./backend
+    build : ./app
     ports:
       - "3000:3000"
     environment:
-      DATABASE_HOST: dbserver
-      DATABASE_PORT: 5433
+      # FIX: was dbserver:5433 - the db service is named db and uses the default port 5432
+#      DATABASE_HOST: dbserver
+#      DATABASE_PORT: 5433
+      DATABASE_HOST: db
+      DATABASE_PORT: 5432
       JWT_SECRET: ${JWT_SECRET}
+      # FIX:short-form depends_on only waits for the container to start , not for postgres to be ready - app was connecting before DB was up
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
   db:
     image: postgres:16
@@ -17,6 +24,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: appdb
+    # ADDED: gives depends_on above something to atually wait for
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d appdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   nginx:
     image: nginx:latest

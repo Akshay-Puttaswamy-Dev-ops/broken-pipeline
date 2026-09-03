@@ -13,16 +13,20 @@ spec:
         app: broken
     spec:
       containers:
-      - name: app
-        image: broken-app:latest
-        command: ["node","index.js"]
-        env:
-        - name: JWT_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: app-secret
-              key: jwt
-        livenessProbe:
-          httpGet:
-            path: /live
-            port: 3000
+        - name: app
+          image: broken-app:latest
+          # FIX:was command: ["node","index.js"] - no index .js in image, entry point is server.js . This was the actual crsh (CrashLoopBackOff)
+#          command: ["node","index.js"]
+          command: ["node","server.js"]
+          env:
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: app-secret
+                  key: jwt
+          livenessProbe:
+            httpGet:
+              # FIX: was "/live" -route doesn't exit, every probe got 404
+#              path: /live
+              path: /health
+              port: 3000
