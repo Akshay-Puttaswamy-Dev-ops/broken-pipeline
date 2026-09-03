@@ -1,24 +1,30 @@
-name: CI
-on:
-    push:
-        branches: [ "main" ]
-    pull_request:
-        branches: [ "main" ]
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7.0.1
-      -  run: docker build -t broken-app:ci ./app
-      -  run: docker compose up -d --build
-      - name: smoke test
-        run: |
-          for i in $(seq 1,15); do
-            curl -fs http://localhost:3000/health && exit 0
-            sleep 2
-          done
-          docker compose logs
-          exit 1
-      - if: always()
-        run: docker compose down -v
+name: Local Minikube Deploy
 
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, minikube]
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Build app image
+        run: docker build -t broken-app:local ./app
+
+      - name: Load image into Minikube
+        run: minikube image load broken-app:local
+
+      - name: Apply Kubernetes secret
+        run: kubectl apply -f kubernetes/secretcConf.yaml
+
+      - name: Apply Kubernetes deployment
+        run: kubectl apply -f kubernetes/deployment.yaml
+
+      - name: Wait for deployment
+        run: kubectl rollout status deployment/broken-app --timeout=180s
+
+      - name: Show pod status
+        run: kubectl get pods
