@@ -20,5 +20,5 @@ jobs:
           docker compose logs
           exit 1
       - if: always()
-        run: docker compose down -V
+        run: docker compose down -v
 
