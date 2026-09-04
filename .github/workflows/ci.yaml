@@ -34,3 +34,4 @@ jobs:
 
       - name: Show pod status
         run: kubectl get pods
+        
